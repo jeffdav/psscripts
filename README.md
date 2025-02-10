@@ -17,9 +17,15 @@ PS > git bm
 ```
 
 ## Show-TreeStructure.ps1
-A replacement for the built-in dos `TREE` command.
+A replacement for the builtin DOS `TREE` command.
 
 ![image](https://github.com/user-attachments/assets/a9e07f00-fccf-4b00-8350-499e40e782b2)
+
+Add this to your `$PROFILE` file:
+```pwsh
+. "$(Join-Path (Split-Path $PROFILE) Show-TreeStructure.ps1)"
+Set-Alias -Name tree -Value Show-TreeStructure
+```
 
 ```pwsh
 NAME
