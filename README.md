@@ -27,6 +27,7 @@ Add this to your `$PROFILE` file:
 Set-Alias -Name tree -Value Show-TreeStructure
 ```
 
+It's workings are pretty straightforward.
 ```pwsh
 NAME
     Show-TreeStructure
