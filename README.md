@@ -12,7 +12,23 @@ Add this to your `~/.gitconfig`:
         bm = !pwsh.exe C:/PATH/TO/psscripts/BranchManager.ps1
 ```
 Then just type:
-```
+```pwsh
 PS > git bm
 ```
 
+## Show-TreeStructure.ps1
+A replacement for the built-in dos `TREE` command.
+
+![image](https://github.com/user-attachments/assets/a9e07f00-fccf-4b00-8350-499e40e782b2)
+
+```pwsh
+NAME
+    Show-TreeStructure
+
+SYNTAX
+    Show-TreeStructure [[-Depth] <int>] [-Path <string>] [-ShowFiles] [-LeafFilesOnly]  [<CommonParameters>]
+```
+
+- Colorizes by depth.
+- Allows specifying depth.
+- Options to show files.
