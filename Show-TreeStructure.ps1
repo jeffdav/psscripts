@@ -39,6 +39,7 @@ function Show-TreeStructure {
         [int] $Depth = [int]::MaxValue,
         [string] $Path = ".",
         [switch] $ShowFiles,
+        [switch] $Sizes,
         [switch] $LeafFilesOnly
     )
 
@@ -52,18 +53,28 @@ function Show-TreeStructure {
         "Red"
     )
 
+    function Format-FileSize {
+        param([long] $Size)
+
+        if ($Size -ge 1TB) { return "{0:N2} TB" -f ($Size / 1TB) }
+        if ($Size -ge 1GB) { return "{0:N2} GB" -f ($Size / 1GB) }
+        if ($Size -ge 1MB) { return "{0:N2} MB" -f ($Size / 1MB) }
+        if ($Size -ge 1KB) { return "{0:N2} KB" -f ($Size / 1KB) }
+        return "$Size B"
+    }
+
     function Write-TreeItem {
         param(
             [string] $Prefix,
-            [string] $Item,
+            $Item,
             [int] $CurrentDepth,
             [bool] $IsDirectory,
             [string] $ErrorMessage = ""
         )
-        
+
         # Write the prefix in bright white
         Write-Host $Prefix -ForegroundColor White -NoNewline
-        
+
         # Write the item name in grey if there's an error, otherwise use depth-based color
         if ($ErrorMessage) {
             Write-Host $Item -ForegroundColor DarkGray -NoNewline
@@ -71,7 +82,22 @@ function Show-TreeStructure {
         } else {
             # Write the item name in the color corresponding to its depth
             $ColorIndex = $CurrentDepth % $Colors.Length
-            Write-Host $Item -ForegroundColor $Colors[$ColorIndex]
+            if ($IsDirectory) {
+                Write-Host $Item -ForegroundColor $Colors[$ColorIndex] -NoNewline:$Sizes
+                if ($Sizes) {
+                    try {
+                        $DirSize = Get-ChildItem -Path $Item.FullName -ErrorAction Stop -Recurse -File | Measure-Object -Property Length -Sum | Select-Object -ExpandProperty Sum
+                        Write-Host " ($(Format-FileSize $DirSize))" -ForegroundColor Gray
+                    } catch {
+                        Write-Host " [Access Denied]" -ForegroundColor DarkGray
+                    }
+                }
+            } else {
+                Write-Host $Item -ForegroundColor $Colors[$ColorIndex] -NoNewline:$Sizes
+                if ($Sizes) {
+                    Write-Host " ($(Format-FileSize $Item.Length))" -ForegroundColor Gray
+                }
+            }
         }
     }
 
@@ -111,10 +137,10 @@ function Show-TreeStructure {
         $TotalItems = $Directories.Count + $Files.Count
         for ($ItemIndex = 0; $ItemIndex -lt $TotalItems; $ItemIndex++) {
             $IsLast = ($ItemIndex -eq $TotalItems - 1)
-            $CurrentItem = if ($ItemIndex -lt $Directories.Count) { 
-                $Directories[$ItemIndex] 
-            } else { 
-                $Files[$ItemIndex - $Directories.Count] 
+            $CurrentItem = if ($ItemIndex -lt $Directories.Count) {
+                $Directories[$ItemIndex]
+            } else {
+                $Files[$ItemIndex - $Directories.Count]
             }
             $IsDirectory = $ItemIndex -lt $Directories.Count
 
@@ -133,7 +159,7 @@ function Show-TreeStructure {
                 }
             }
 
-            Write-TreeItem -Prefix $CurrentPrefix -Item $CurrentItem.Name -CurrentDepth $CurrentDepth -IsDirectory $IsDirectory -ErrorMessage $ErrorMsg
+            Write-TreeItem -Prefix $CurrentPrefix -Item $CurrentItem -CurrentDepth $CurrentDepth -IsDirectory $IsDirectory -ErrorMessage $ErrorMsg
 
             # Recursively process directories (only if no access error)
             if ($IsDirectory -and -not $ErrorMsg) {
